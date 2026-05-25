@@ -4,22 +4,32 @@
 
 Android app that reads Mercury SmartCraft engine data via Bluetooth LE and displays it as widgets in OsmAnd.
 
+<p align="center">
+  <img src="assets/app.jpg" width="75%">
+</p>
+
+See it in action in OsmAnd:
+
+<p align="center">
+  <video src="assets/demo_osmand.mp4" width="50%" controls></video>
+</p>
+
 ## Architecture
 
 ```
-┌─────────────────────┐     BLE      ┌──────────────────────┐
-│  Mercury SmartCraft │◄────────────►│  SmartCraftService   │
-│  BLE Gateway        │  notifications│  (Foreground Service)│
-└─────────────────────┘              │                      │
-                                     │  SmartCraftParser    │
-                                     │  (protocol decode)   │
-                                     └──────────┬───────────┘
-                                                │ AIDL
-                                     ┌──────────▼───────────┐
-                                     │  OsmAnd              │
-                                     │  (map widgets)       │
-                                     │  RPM | Speed | Temp  │
-                                     └──────────────────────┘
+┌─────────────────────┐       BLE      ┌──────────────────────┐
+│  Mercury SmartCraft │◄──────────────►│  SmartCraftService   │
+│  BLE Gateway        │  notifications │  (Foreground Service)│
+└─────────────────────┘                │                      │
+                                       │  SmartCraftParser    │
+                                       │  (protocol decode)   │
+                                       └──────────┬───────────┘
+                                                  │ AIDL
+                                       ┌──────────▼───────────┐
+                                       │  OsmAnd              │
+                                       │  (map widgets)       │
+                                       │  RPM | Speed | Temp  │
+                                       └──────────────────────┘
 ```
 
 ## Widgets
