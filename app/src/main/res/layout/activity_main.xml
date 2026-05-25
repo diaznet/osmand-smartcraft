@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:background="#1A1A2E">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SmartCraft for OsmAnd"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#E0E0E0" />
+
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="○ Stopped"
+        android:textSize="16sp"
+        android:textColor="#CCCCCC" />
+
+    <TextView
+        android:id="@+id/ble_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="BLE: idle"
+        android:textSize="14sp"
+        android:textColor="#888888" />
+
+    <TextView
+        android:id="@+id/osmand_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="OsmAnd: not connected"
+        android:textSize="14sp"
+        android:textColor="#888888" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/toggle_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start" />
+
+        <TextView
+            android:id="@+id/open_osmand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="Open OsmAnd ↗"
+            android:textSize="14sp"
+            android:textColor="#64B5F6"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <Switch
+        android:id="@+id/auto_start_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Auto-start when opening app"
+        android:textColor="#CCCCCC" />
+
+    <Switch
+        android:id="@+id/simulator_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Simulator mode (no BLE needed)"
+        android:textColor="#CCCCCC" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Units"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#AAAAAA" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/temp_unit_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="°C"
+            android:textSize="12sp"
+            android:minWidth="60dp" />
+
+        <Button
+            android:id="@+id/pressure_unit_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:text="kPa"
+            android:textSize="12sp"
+            android:minWidth="60dp" />
+
+        <Button
+            android:id="@+id/flow_unit_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:text="L/h"
+            android:textSize="12sp"
+            android:minWidth="60dp" />
+
+    </LinearLayout>
+
+    <Switch
+        android:id="@+id/debug_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Show debug"
+        android:textColor="#CCCCCC" />
+
+    <Switch
+        android:id="@+id/file_log_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Log to file (for diagnostics)"
+        android:textColor="#CCCCCC" />
+
+    <TextView
+        android:id="@+id/file_log_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="10sp"
+        android:textColor="#666666"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/debug_panel"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Switch
+                android:id="@+id/filter_ble"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLE"
+                android:textSize="12sp"
+                android:textColor="#AAAAAA"
+                android:checked="true" />
+
+            <Switch
+                android:id="@+id/filter_aidl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="AIDL"
+                android:textSize="12sp"
+                android:textColor="#AAAAAA"
+                android:checked="true" />
+
+            <Switch
+                android:id="@+id/filter_sim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="SIM"
+                android:textSize="12sp"
+                android:textColor="#AAAAAA"
+                android:checked="true" />
+
+            <Switch
+                android:id="@+id/filter_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="DATA"
+                android:textSize="12sp"
+                android:textColor="#AAAAAA"
+                android:checked="true" />
+
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/debug_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="4dp"
+            android:background="#0D0D1A">
+
+            <TextView
+                android:id="@+id/debug_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:textColor="#88CC88"
+                android:padding="8dp" />
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</LinearLayout>

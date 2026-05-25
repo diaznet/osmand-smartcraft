@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Gauge circle -->
+    <path
+        android:pathData="M54,27 A27,27 0 1,1 53.99,27"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+
+    <!-- Gauge tick marks -->
+    <path
+        android:pathData="M54,30 L54,34 M38,38 L41,41 M30,54 L34,54 M38,70 L41,67 M70,38 L67,41 M78,54 L74,54 M70,70 L67,67"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
+
+    <!-- Gauge needle pointing to ~2 o'clock (high RPM) -->
+    <path
+        android:pathData="M54,54 L68,38"
+        android:strokeColor="#FF5722"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000" />
+
+    <!-- Center dot -->
+    <path
+        android:pathData="M54,54 m-3,0 a3,3 0 1,1 6,0 a3,3 0 1,1 -6,0"
+        android:fillColor="#E0E0E0" />
+
+    <!-- Propeller blades (3-blade) below gauge -->
+    <path
+        android:pathData="M54,72 C58,74 60,80 54,82 C48,80 50,74 54,72"
+        android:fillColor="#4CAF50" />
+    <path
+        android:pathData="M54,72 C50,70 44,72 44,76 C46,78 52,76 54,72"
+        android:fillColor="#388E3C" />
+    <path
+        android:pathData="M54,72 C58,70 64,72 64,76 C62,78 56,76 54,72"
+        android:fillColor="#388E3C" />
+
+</vector>
