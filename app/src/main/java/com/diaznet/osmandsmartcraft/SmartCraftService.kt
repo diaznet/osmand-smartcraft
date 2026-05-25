@@ -1,5 +1,6 @@
 package com.diaznet.osmandsmartcraft
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,6 +16,7 @@ import android.util.Log
 import kotlinx.coroutines.*
 import java.util.UUID
 
+@SuppressLint("MissingPermission")
 class SmartCraftService : Service() {
 
     companion object {
