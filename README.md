@@ -10,9 +10,8 @@ Android app that reads Mercury SmartCraft engine data via Bluetooth LE and displ
 
 See it in action in OsmAnd:
 
-<p align="center">
-  <video src="assets/demo_osmand.mp4" width="50%" controls></video>
-</p>
+https://github.com/user-attachments/assets/3f409dc6-4260-4583-a756-5dcba74a27a7
+
 
 ## Architecture
 
