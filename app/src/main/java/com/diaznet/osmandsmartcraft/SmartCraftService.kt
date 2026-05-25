@@ -109,6 +109,7 @@ class SmartCraftService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, buildNotification("Starting..."))
         osmAndBridge.connect()
+        scope.launch { while (isActive) { osmAndConnected = osmAndBridge.isOsmAndConnected(); delay(1000) } }
 
         if (simulatorMode) {
             bleStatus = "Simulator"
