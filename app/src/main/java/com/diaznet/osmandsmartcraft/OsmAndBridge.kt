@@ -14,12 +14,17 @@ import net.osmand.aidl.mapwidget.UpdateMapWidgetParams
 class OsmAndBridge(private val context: Context) {
 
     companion object {
-        private const val OSMAND_PACKAGE = "net.osmand"
-        private const val OSMAND_SERVICE = "net.osmand.aidl.OsmandAidlService"
+        const val OSMAND_PACKAGE_FREE = "net.osmand"
+        const val OSMAND_PACKAGE_PLUS = "net.osmand.plus"
+        private const val AIDL_ACTION = "net.osmand.aidl.OsmandAidlService"
     }
 
     private var osmAndApi: IOsmAndAidlInterface? = null
     private val unitPrefs = UnitPrefs(context)
+
+    /** The resolved OsmAnd package currently in use (null until connect is called). */
+    var resolvedPackage: String? = null
+        private set
 
     @Volatile
     var connected = false
@@ -29,14 +34,16 @@ class OsmAndBridge(private val context: Context) {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             osmAndApi = IOsmAndAidlInterface.Stub.asInterface(service)
             connected = true
-            log("Bound to OsmAnd service")
+            val flavor = if (resolvedPackage == OSMAND_PACKAGE_PLUS) "OsmAnd+" else "OsmAnd"
+            log("Bound to $flavor service ($resolvedPackage)")
             registerWidgets()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             osmAndApi = null
             connected = false
-            log("Disconnected from OsmAnd")
+            val flavor = if (resolvedPackage == OSMAND_PACKAGE_PLUS) "OsmAnd+" else "OsmAnd"
+            log("Disconnected from $flavor")
         }
     }
 
@@ -46,10 +53,66 @@ class OsmAndBridge(private val context: Context) {
 
     fun isOsmAndConnected(): Boolean = connected
 
+    /**
+     * Resolves which OsmAnd package to target based on user preference and installed apps.
+     * AUTO: prefers OsmAnd+ if installed, falls back to free.
+     */
+    private fun resolvePackage(): String {
+        return when (unitPrefs.osmAndTarget) {
+            UnitPrefs.OsmAndTarget.OSMAND -> OSMAND_PACKAGE_FREE
+            UnitPrefs.OsmAndTarget.OSMAND_PLUS -> OSMAND_PACKAGE_PLUS
+            UnitPrefs.OsmAndTarget.AUTO -> {
+                if (isPackageInstalled(OSMAND_PACKAGE_PLUS)) OSMAND_PACKAGE_PLUS
+                else OSMAND_PACKAGE_FREE
+            }
+        }
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            context.packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun connect() {
-        val intent = Intent(OSMAND_SERVICE).apply { setPackage(OSMAND_PACKAGE) }
-        val bound = context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-        log("bindService result: $bound")
+        val pkg = resolvePackage()
+        resolvedPackage = pkg
+        val flavor = if (pkg == OSMAND_PACKAGE_PLUS) "OsmAnd+" else "OsmAnd"
+        val mode = unitPrefs.osmAndTarget.name
+        log("Target: $flavor ($pkg) [mode=$mode]")
+        val bound = tryBind(pkg, serviceConnection)
+        log("bindService($flavor) result: $bound")
+    }
+
+    /**
+     * Attempts to bind to the OsmAnd AIDL service. The service class is always
+     * net.osmand.aidl.OsmandAidlService regardless of which OsmAnd variant.
+     */
+    private fun tryBind(pkg: String, conn: ServiceConnection): Boolean {
+        // Explicit component (most reliable)
+        val serviceClass = "net.osmand.aidl.OsmandAidlService"
+        val explicit = Intent().apply {
+            component = android.content.ComponentName(pkg, serviceClass)
+        }
+        var bound = try { context.bindService(explicit, conn, Context.BIND_AUTO_CREATE) } catch (_: Exception) { false }
+        if (bound) {
+            log("Bound via component: $pkg/$serviceClass")
+            return true
+        }
+
+        // Fallback: implicit intent with action
+        val implicit = Intent(AIDL_ACTION).apply { setPackage(pkg) }
+        bound = try { context.bindService(implicit, conn, Context.BIND_AUTO_CREATE) } catch (_: Exception) { false }
+        if (bound) {
+            log("Bound via action: $AIDL_ACTION")
+            return true
+        }
+
+        log("FAILED to bind to $pkg (tried component + action)")
+        return false
     }
 
     fun disconnect() {
@@ -61,7 +124,8 @@ class OsmAndBridge(private val context: Context) {
     }
 
     fun connectAndRun(action: () -> Unit) {
-        val intent = Intent(OSMAND_SERVICE).apply { setPackage(OSMAND_PACKAGE) }
+        val pkg = resolvePackage()
+        resolvedPackage = pkg
         val conn = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 osmAndApi = IOsmAndAidlInterface.Stub.asInterface(service)
@@ -72,7 +136,7 @@ class OsmAndBridge(private val context: Context) {
             }
             override fun onServiceDisconnected(name: ComponentName?) { connected = false }
         }
-        context.bindService(intent, conn, Context.BIND_AUTO_CREATE)
+        tryBind(pkg, conn)
     }
 
     fun clearAllWidgets() {
