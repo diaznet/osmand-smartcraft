@@ -8,9 +8,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toggleButton: Button
     private lateinit var autoStartSwitch: Switch
     private lateinit var simulatorSwitch: Switch
+    private lateinit var osmandTargetSpinner: Spinner
     private lateinit var tempUnitBtn: Button
     private lateinit var pressureUnitBtn: Button
     private lateinit var flowUnitBtn: Button
@@ -38,11 +42,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var filterAidl: Switch
     private lateinit var filterSim: Switch
     private lateinit var filterData: Switch
+    private lateinit var versionText: TextView
+    private lateinit var githubLink: TextView
 
     private val prefs by lazy { getSharedPreferences("smartcraft", MODE_PRIVATE) }
     private lateinit var unitPrefs: UnitPrefs
     private val handler = Handler(Looper.getMainLooper())
     private var refreshing = false
+
+    private val osmandTargetOptions = listOf("Auto", "OsmAnd", "OsmAnd+")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         toggleButton = findViewById(R.id.toggle_button)
         autoStartSwitch = findViewById(R.id.auto_start_switch)
         simulatorSwitch = findViewById(R.id.simulator_switch)
+        osmandTargetSpinner = findViewById(R.id.osmand_target_spinner)
         tempUnitBtn = findViewById(R.id.temp_unit_btn)
         pressureUnitBtn = findViewById(R.id.pressure_unit_btn)
         flowUnitBtn = findViewById(R.id.flow_unit_btn)
@@ -68,6 +77,16 @@ class MainActivity : AppCompatActivity() {
         filterAidl = findViewById(R.id.filter_aidl)
         filterSim = findViewById(R.id.filter_sim)
         filterData = findViewById(R.id.filter_data)
+        versionText = findViewById(R.id.version_text)
+        githubLink = findViewById(R.id.github_link)
+
+        val pkgInfo = packageManager.getPackageInfo(packageName, 0)
+        versionText.text = "v${pkgInfo.versionName}"
+        githubLink.setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/diaznet/osmand-smartcraft")))
+        }
+
+        unitPrefs = UnitPrefs(this)
 
         autoStartSwitch.isChecked = prefs.getBoolean("auto_start", false)
         autoStartSwitch.setOnCheckedChangeListener { _, checked ->
@@ -81,12 +100,14 @@ class MainActivity : AppCompatActivity() {
         }
         SmartCraftService.simulatorMode = simulatorSwitch.isChecked
 
+        setupOsmandTargetSpinner()
+
         openOsmand.setOnClickListener {
-            val intent = packageManager.getLaunchIntentForPackage("net.osmand")
+            val pkg = resolveOsmAndPackage()
+            val intent = packageManager.getLaunchIntentForPackage(pkg)
             if (intent != null) startActivity(intent)
         }
 
-        unitPrefs = UnitPrefs(this)
         setupUnitButtons()
 
         debugSwitch.setOnCheckedChangeListener { _, checked ->
@@ -118,6 +139,63 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() { super.onPause(); stopRefresh() }
 
     private fun toggle() { if (SmartCraftService.isRunning) stop() else start() }
+
+    private fun setupOsmandTargetSpinner() {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, osmandTargetOptions)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        osmandTargetSpinner.adapter = adapter
+
+        val currentIndex = when (unitPrefs.osmAndTarget) {
+            UnitPrefs.OsmAndTarget.AUTO -> 0
+            UnitPrefs.OsmAndTarget.OSMAND -> 1
+            UnitPrefs.OsmAndTarget.OSMAND_PLUS -> 2
+        }
+        osmandTargetSpinner.setSelection(currentIndex)
+
+        osmandTargetSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                unitPrefs.osmAndTarget = when (position) {
+                    1 -> UnitPrefs.OsmAndTarget.OSMAND
+                    2 -> UnitPrefs.OsmAndTarget.OSMAND_PLUS
+                    else -> UnitPrefs.OsmAndTarget.AUTO
+                }
+                updateOpenOsmandLabel()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        updateOpenOsmandLabel()
+    }
+
+    private fun resolveOsmAndPackage(): String {
+        return when (unitPrefs.osmAndTarget) {
+            UnitPrefs.OsmAndTarget.OSMAND -> OsmAndBridge.OSMAND_PACKAGE_FREE
+            UnitPrefs.OsmAndTarget.OSMAND_PLUS -> OsmAndBridge.OSMAND_PACKAGE_PLUS
+            UnitPrefs.OsmAndTarget.AUTO -> {
+                if (isPackageInstalled(OsmAndBridge.OSMAND_PACKAGE_PLUS))
+                    OsmAndBridge.OSMAND_PACKAGE_PLUS
+                else OsmAndBridge.OSMAND_PACKAGE_FREE
+            }
+        }
+    }
+
+    private fun resolveOsmAndLabel(): String {
+        val pkg = resolveOsmAndPackage()
+        return if (pkg == OsmAndBridge.OSMAND_PACKAGE_PLUS) "OsmAnd+" else "OsmAnd"
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            this.packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun updateOpenOsmandLabel() {
+        openOsmand.text = "Open ${resolveOsmAndLabel()} ↗"
+    }
 
     private fun setupUnitButtons() {
         updateUnitButtonLabels()
@@ -213,16 +291,19 @@ class MainActivity : AppCompatActivity() {
 
         filterSim.isEnabled = SmartCraftService.simulatorMode
 
+        val label = resolveOsmAndLabel()
         if (SmartCraftService.isRunning && SmartCraftService.osmAndConnected) {
-            osmandStatus.text = "OsmAnd: ✓ connected"
+            osmandStatus.text = "$label: ✓ connected"
             osmandStatus.setTextColor(0xFF4CAF50.toInt())
         } else if (SmartCraftService.isRunning) {
-            osmandStatus.text = "OsmAnd: connecting..."
+            osmandStatus.text = "$label: connecting..."
             osmandStatus.setTextColor(0xFFFF9800.toInt())
         } else {
-            osmandStatus.text = "OsmAnd: not connected"
+            osmandStatus.text = "$label: not connected"
             osmandStatus.setTextColor(0xFF888888.toInt())
         }
+
+        updateOpenOsmandLabel()
     }
 
     private fun checkPermissions(): Boolean {

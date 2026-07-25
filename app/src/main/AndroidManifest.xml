@@ -17,6 +17,7 @@
     <!-- Required to bind to OsmAnd's AIDL service -->
     <queries>
         <package android:name="net.osmand" />
+        <package android:name="net.osmand.plus" />
     </queries>
 
     <application

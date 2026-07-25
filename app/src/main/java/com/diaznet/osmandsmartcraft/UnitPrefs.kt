@@ -8,6 +8,7 @@ class UnitPrefs(context: Context) {
     enum class TempUnit { CELSIUS, FAHRENHEIT }
     enum class PressureUnit { KPA, PSI, BAR }
     enum class FlowUnit { LPH, GPH }
+    enum class OsmAndTarget { AUTO, OSMAND, OSMAND_PLUS }
 
     var tempUnit: TempUnit
         get() = if (prefs.getString("temp_unit", "C") == "F") TempUnit.FAHRENHEIT else TempUnit.CELSIUS
@@ -28,6 +29,18 @@ class UnitPrefs(context: Context) {
     var flowUnit: FlowUnit
         get() = if (prefs.getString("flow_unit", "Lph") == "GPH") FlowUnit.GPH else FlowUnit.LPH
         set(v) = prefs.edit().putString("flow_unit", if (v == FlowUnit.GPH) "GPH" else "Lph").apply()
+
+    var osmAndTarget: OsmAndTarget
+        get() = when (prefs.getString("osmand_target", "auto")) {
+            "osmand" -> OsmAndTarget.OSMAND
+            "osmand_plus" -> OsmAndTarget.OSMAND_PLUS
+            else -> OsmAndTarget.AUTO
+        }
+        set(v) = prefs.edit().putString("osmand_target", when (v) {
+            OsmAndTarget.OSMAND -> "osmand"
+            OsmAndTarget.OSMAND_PLUS -> "osmand_plus"
+            OsmAndTarget.AUTO -> "auto"
+        }).apply()
 
     fun formatTemp(celsius: Float): Pair<String, String> = when (tempUnit) {
         TempUnit.CELSIUS -> "%.0f".format(celsius) to "°C"

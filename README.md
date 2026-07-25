@@ -51,7 +51,7 @@ https://github.com/user-attachments/assets/3f409dc6-4260-4583-a756-5dcba74a27a7
 ## Prerequisites
 
 - Android device with BLE support
-- OsmAnd free installed
+- OsmAnd or OsmAnd+ installed
 - Mercury SmartCraft BLE gateway (VesselView Mobile or compatible)
 
 ## Build
@@ -87,6 +87,6 @@ git push origin v1.0.0
 ## Notes
 
 - Icons use OsmAnd's built-in OBD widget drawables (`widget_obd_*`).
-- Targets OsmAnd free (`net.osmand`). Change `OSMAND_PACKAGE` in `OsmAndBridge.kt` for OsmAnd+.
+- Targets OsmAnd free (`net.osmand`) or OsmAnd+ (`net.osmand.plus`). Use the target selector in the app (Auto / OsmAnd / OsmAnd+). Auto mode prefers OsmAnd+ if installed.
 - Units (°C/°F, kPa/bar/PSI, L/h/gal/h) are configurable in the app.
 - See [PROTOCOL.md](PROTOCOL.md) for BLE protocol details and reverse engineering notes.
