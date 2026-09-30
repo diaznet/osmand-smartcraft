@@ -22,6 +22,14 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v3
 
+      - name: Check tag matches gradle.properties
+        run: |
+          VERSION=$(grep '^appVersionName=' gradle.properties | cut -d= -f2)
+          CODE=$(grep '^appVersionCode=' gradle.properties | cut -d= -f2)
+          [ "v$VERSION" = "${{ github.ref_name }}" ] || { echo "::error::Tag ${{ github.ref_name }} != appVersionName $VERSION"; exit 1; }
+          IFS=. read -r MA MI PA <<< "$VERSION"
+          [ "$CODE" = "$((MA*10000 + MI*100 + PA))" ] || { echo "::error::appVersionCode $CODE != expected for $VERSION"; exit 1; }
+
       - name: Run unit tests
         run: ./gradlew test
 

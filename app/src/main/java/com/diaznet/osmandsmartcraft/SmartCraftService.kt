@@ -9,10 +9,15 @@ import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Log
+import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.*
 import java.util.UUID
 
@@ -27,6 +32,7 @@ class SmartCraftService : Service() {
         private const val MAX_LOG_LINES = 200
         private const val STALE_TIMEOUT_MS = 10_000L
         private const val MAX_RECONNECT_DELAY_MS = 30_000L
+        private const val EFFICIENCY_WINDOW_MS = 10_000L
 
         @Volatile var isRunning = false; private set
         @Volatile var simulatorMode = false
@@ -89,6 +95,12 @@ class SmartCraftService : Service() {
     private var lastDataTimestamp = 0L
     private var stalenessJob: Job? = null
 
+    private lateinit var speedProvider: SpeedProvider
+    @Volatile private var latestData = SmartCraftData()
+    @Volatile private var simSpeedKmh: Float? = null
+    private val flowAverage = RollingAverage(EFFICIENCY_WINDOW_MS)
+    private val speedAverage = RollingAverage(EFFICIENCY_WINDOW_MS)
+
     private val dataCharUuids = listOf(
         SmartCraftParser.RPM_UUID, SmartCraftParser.COOLANT_TEMP_UUID,
         SmartCraftParser.VOLTAGE_UUID, SmartCraftParser.FUEL_USED_UUID,
@@ -104,10 +116,11 @@ class SmartCraftService : Service() {
         bleStatus = "Starting"
         createNotificationChannel()
         osmAndBridge = OsmAndBridge(this)
+        speedProvider = SpeedProvider(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification("Starting..."))
+        startForegroundWithTypes()
         osmAndBridge.connect()
         scope.launch { while (isActive) { osmAndConnected = osmAndBridge.isOsmAndConnected(); delay(1000) } }
 
@@ -117,10 +130,25 @@ class SmartCraftService : Service() {
             startSimulator()
         } else {
             acquireWakeLock()
+            speedProvider.start()
             startBleScan()
             startStalenessMonitor()
         }
+        startEfficiencyMonitor()
         return START_STICKY
+    }
+
+    /**
+     * The location type is only claimed when permission is held, otherwise startForeground throws on API 34.
+     * InlinedApi: ServiceCompat ignores the type flags below API 29.
+     */
+    @SuppressLint("InlinedApi")
+    private fun startForegroundWithTypes() {
+        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        }
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification("Starting..."), types)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -135,6 +163,7 @@ class SmartCraftService : Service() {
         if (!simulatorMode) {
             stopBleScan()
             bluetoothGatt?.close()
+            speedProvider.stop()
             releaseWakeLock()
         }
         osmAndBridge.disconnect()
@@ -165,6 +194,36 @@ class SmartCraftService : Service() {
         }
     }
 
+    /**
+     * Every second, samples the latest fuel flow (only while BLE data is fresh) and GPS speed
+     * into 10 s rolling averages and pushes km/L. Sampling on a timer rather than per
+     * notification keeps the average valid even if the gateway only notifies on change.
+     */
+    private fun startEfficiencyMonitor() {
+        scope.launch {
+            var tick = 0
+            while (isActive) {
+                delay(1000)
+                val now = SystemClock.elapsedRealtime()
+                val engineFresh = simulatorMode ||
+                    (lastDataTimestamp > 0 && System.currentTimeMillis() - lastDataTimestamp <= STALE_TIMEOUT_MS)
+                if (engineFresh) flowAverage.add(latestData.fuelFlowLph, now)
+                val speed = if (simulatorMode) simSpeedKmh else speedProvider.currentSpeedKmh()
+                speed?.let { speedAverage.add(it, now) }
+
+                val flow = flowAverage.average(now)
+                val avgSpeed = speedAverage.average(now)
+                val kmPerL = FuelEfficiency.kmPerLiter(flow, avgSpeed)
+                osmAndBridge.updateEfficiency(kmPerL)
+                if (tick++ % 10 == 0) {
+                    log("DATA", "Efficiency: flow=${flow?.let { "%.2f".format(it) } ?: "--"} L/h " +
+                        "speed=${avgSpeed?.let { "%.1f".format(it) } ?: "--"} km/h " +
+                        "→ ${kmPerL?.let { "%.2f".format(it) } ?: "--"} km/L")
+                }
+            }
+        }
+    }
+
     private fun startSimulator() {
         updateNotification("Simulator running")
         scope.launch {
@@ -186,6 +245,8 @@ class SmartCraftService : Service() {
                         oilTempC = 85f + (kotlin.math.sin(tick * 0.08) * 10).toFloat(),
                         seawaterTempC = 18f + (kotlin.math.sin(tick * 0.03) * 4).toFloat()
                     )
+                    latestData = data
+                    simSpeedKmh = 25f + (kotlin.math.sin(tick * 0.07) * 15).toFloat()
                     osmAndBridge.updateData(data)
                     if (tick % 10 == 0) log("SIM", "RPM=${data.rpm} V=%.1f T=%.0f".format(data.voltageV, data.coolantTempC))
                 } else {
@@ -307,6 +368,7 @@ class SmartCraftService : Service() {
             lastDataTimestamp = System.currentTimeMillis()
             log("DATA", "${uuid.substring(4, 8)}: ${data.joinToString(" ") { "%02X".format(it) }}")
             val parsed = parser.parseCharacteristic(uuid, data)
+            latestData = parsed
             osmAndConnected = osmAndBridge.isOsmAndConnected()
             osmAndBridge.updateData(parsed)
         }

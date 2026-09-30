@@ -21,3 +21,12 @@ icons_list.txt
 
 # Temp investigation files
 *.xapk
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Local agent tooling config (graft) — machine-specific, not committed
+.claude/
+.kiro/
+.mcp.json
+.ignore

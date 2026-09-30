@@ -1,0 +1,2 @@
+• New fuel efficiency widget, calculated from engine fuel flow and GPS speed (km/L, L/100km, NM/L, L/NM, US mpg)
+• New version numbering (version code 10004)

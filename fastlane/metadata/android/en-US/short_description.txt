@@ -1,0 +1,1 @@
+Mercury SmartCraft / VesselView Mobile boat engine data as OsmAnd map widgets

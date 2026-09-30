@@ -33,26 +33,27 @@ https://github.com/user-attachments/assets/3f409dc6-4260-4583-a756-5dcba74a27a7
 
 ## Widgets
 
-| Widget ID | Metric | Unit |
-|-----------|--------|------|
-| smartcraft_rpm | Engine RPM | RPM |
-| smartcraft_temp | Coolant temperature | °C / °F |
-| smartcraft_voltage | Battery voltage | V |
-| smartcraft_fuel_flow | Fuel consumption | L/h / gal/h |
-| smartcraft_fuel_level | Fuel tank level | % |
-| smartcraft_oil_pressure | Oil pressure | kPa / bar / PSI |
-| smartcraft_runtime | Engine hours | h |
-| smartcraft_fuel_used | Fuel used (trip) | raw |
-| smartcraft_gear | Gear (N/F/R) | — |
-| smartcraft_block_pressure | Block pressure | kPa / bar / PSI |
-| smartcraft_oil_temp | Oil temperature | °C / °F |
-| smartcraft_seawater_temp | Seawater temperature | °C / °F |
+| Widget ID | Metric | Unit | Source |
+|-----------|--------|------|--------|
+| smartcraft_rpm | Engine RPM | RPM | BLE |
+| smartcraft_temp | Coolant temperature | °C / °F | BLE |
+| smartcraft_voltage | Battery voltage | V | BLE |
+| smartcraft_fuel_flow | Fuel consumption | L/h / gal/h | BLE |
+| smartcraft_fuel_level | Fuel tank level | % | BLE |
+| smartcraft_oil_pressure | Oil pressure | kPa / bar / PSI | BLE |
+| smartcraft_runtime | Engine hours | h | BLE |
+| smartcraft_fuel_used | Fuel used (trip) | raw | BLE |
+| smartcraft_gear | Gear (N/F/R) | — | BLE |
+| smartcraft_block_pressure | Block pressure | kPa / bar / PSI | BLE |
+| smartcraft_oil_temp | Oil temperature | °C / °F | BLE |
+| smartcraft_seawater_temp | Seawater temperature | °C / °F | BLE |
+| smartcraft_fuel_efficiency | Fuel efficiency (fuel flow ÷ GPS speed) | km/L / L/100km / NM/L / L/NM / mpg | Calculated (engine fuel flow + phone GPS) |
 
 ## Prerequisites
 
 - Android device with BLE support
-- OsmAnd or OsmAnd+ installed
-- Mercury SmartCraft BLE gateway (VesselView Mobile or compatible)
+- [OsmAnd](https://play.google.com/store/apps/details?id=net.osmand) or [OsmAnd+](https://play.google.com/store/apps/details?id=net.osmand.plus) installed (Google Play; see [osmand.net](https://osmand.net/) for other sources)
+- Mercury SmartCraft BLE gateway ([VesselView Mobile](https://www.mercurymarine.com/gauges-and-controls/displays/vesselview-mobile) or compatible)
 
 ## Build
 
@@ -68,11 +69,13 @@ https://github.com/user-attachments/assets/3f409dc6-4260-4583-a756-5dcba74a27a7
 
 ## Release
 
-Tag a version on `main` to trigger a GitHub Release:
+1. Bump `appVersionName` and `appVersionCode` in `gradle.properties` (versionCode = X×10000 + Y×100 + Z, e.g. `1.0.4` → `10004`).
+2. Add release notes to `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` (shown on F-Droid).
+3. Tag the version on `main` to trigger a GitHub Release (CI fails if the tag doesn't match `gradle.properties`):
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.4
+git push origin v1.0.4
 ```
 
 ## Usage
@@ -88,5 +91,10 @@ git push origin v1.0.0
 
 - Icons use OsmAnd's built-in OBD widget drawables (`widget_obd_*`).
 - Targets OsmAnd free (`net.osmand`) or OsmAnd+ (`net.osmand.plus`). Use the target selector in the app (Auto / OsmAnd / OsmAnd+). Auto mode prefers OsmAnd+ if installed.
-- Units (°C/°F, kPa/bar/PSI, L/h/gal/h) are configurable in the app.
+- Units are configurable in the app: temperature (°C / °F), pressure (kPa / bar / PSI), fuel flow (L/h / gal/h) and fuel efficiency (km/L, L/100km, NM/L, L/NM or US mpg).
+- Fuel efficiency is calculated from the engine's fuel flow and the phone's GPS speed over ground, each averaged over the last 10 s. It shows `--` below 4 km/h (~2 kn), when GPS has no fix, or when the engine reports no fuel flow. Default unit: km/L.
 - See [PROTOCOL.md](PROTOCOL.md) for BLE protocol details and reverse engineering notes.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE). You may use, modify and redistribute this project, including in commercial or closed-source apps, provided you keep the copyright notice and the [NOTICE](NOTICE) file, credit this project, and state any changes you made.

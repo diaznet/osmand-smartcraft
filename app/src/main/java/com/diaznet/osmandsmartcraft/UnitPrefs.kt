@@ -10,6 +10,11 @@ class UnitPrefs(context: Context) {
     enum class FlowUnit { LPH, GPH }
     enum class OsmAndTarget { AUTO, OSMAND, OSMAND_PLUS }
 
+    /** [label] is both the displayed unit and the stored pref value. */
+    enum class EfficiencyUnit(val label: String) {
+        KM_PER_L("km/L"), L_PER_100KM("L/100km"), NM_PER_L("NM/L"), L_PER_NM("L/NM"), MPG_US("mpg")
+    }
+
     var tempUnit: TempUnit
         get() = if (prefs.getString("temp_unit", "C") == "F") TempUnit.FAHRENHEIT else TempUnit.CELSIUS
         set(v) = prefs.edit().putString("temp_unit", if (v == TempUnit.FAHRENHEIT) "F" else "C").apply()
@@ -42,6 +47,13 @@ class UnitPrefs(context: Context) {
             OsmAndTarget.AUTO -> "auto"
         }).apply()
 
+    var efficiencyUnit: EfficiencyUnit
+        get() {
+            val stored = prefs.getString("efficiency_unit", EfficiencyUnit.KM_PER_L.label)
+            return EfficiencyUnit.entries.find { it.label == stored } ?: EfficiencyUnit.KM_PER_L
+        }
+        set(v) = prefs.edit().putString("efficiency_unit", v.label).apply()
+
     fun formatTemp(celsius: Float): Pair<String, String> = when (tempUnit) {
         TempUnit.CELSIUS -> "%.0f".format(celsius) to "°C"
         TempUnit.FAHRENHEIT -> "%.0f".format(celsius * 9f / 5f + 32f) to "°F"
@@ -56,5 +68,13 @@ class UnitPrefs(context: Context) {
     fun formatFlow(lph: Float): Pair<String, String> = when (flowUnit) {
         FlowUnit.LPH -> "%.2f".format(lph) to "L/h"
         FlowUnit.GPH -> "%.2f".format(lph * 0.264172f) to "gal/h"
+    }
+
+    fun formatEfficiency(kmPerL: Float?): Pair<String, String> {
+        val unit = efficiencyUnit
+        if (kmPerL == null) return "--" to unit.label
+        val value = FuelEfficiency.convert(kmPerL, unit)
+        val pattern = if (unit == EfficiencyUnit.NM_PER_L || unit == EfficiencyUnit.L_PER_NM) "%.2f" else "%.1f"
+        return pattern.format(value) to unit.label
     }
 }

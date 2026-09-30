@@ -149,6 +149,14 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/efficiency_unit_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:textSize="12sp"
+        android:minWidth="60dp" />
+
     <Switch
         android:id="@+id/debug_switch"
         android:layout_width="wrap_content"
