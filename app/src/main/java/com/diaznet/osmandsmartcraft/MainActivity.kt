@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tempUnitBtn: Button
     private lateinit var pressureUnitBtn: Button
     private lateinit var flowUnitBtn: Button
+    private lateinit var efficiencyUnitBtn: Button
     private lateinit var debugSwitch: Switch
     private lateinit var fileLogSwitch: Switch
     private lateinit var fileLogPath: TextView
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         tempUnitBtn = findViewById(R.id.temp_unit_btn)
         pressureUnitBtn = findViewById(R.id.pressure_unit_btn)
         flowUnitBtn = findViewById(R.id.flow_unit_btn)
+        efficiencyUnitBtn = findViewById(R.id.efficiency_unit_btn)
         debugSwitch = findViewById(R.id.debug_switch)
         fileLogSwitch = findViewById(R.id.file_log_switch)
         fileLogPath = findViewById(R.id.file_log_path)
@@ -217,6 +219,11 @@ class MainActivity : AppCompatActivity() {
                 UnitPrefs.FlowUnit.GPH else UnitPrefs.FlowUnit.LPH
             updateUnitButtonLabels()
         }
+        efficiencyUnitBtn.setOnClickListener {
+            val units = UnitPrefs.EfficiencyUnit.entries
+            unitPrefs.efficiencyUnit = units[(unitPrefs.efficiencyUnit.ordinal + 1) % units.size]
+            updateUnitButtonLabels()
+        }
     }
 
     private fun updateUnitButtonLabels() {
@@ -227,6 +234,7 @@ class MainActivity : AppCompatActivity() {
             UnitPrefs.PressureUnit.PSI -> "PSI"
         }
         flowUnitBtn.text = if (unitPrefs.flowUnit == UnitPrefs.FlowUnit.LPH) "L/h" else "gal/h"
+        efficiencyUnitBtn.text = unitPrefs.efficiencyUnit.label
     }
 
     private fun start() {

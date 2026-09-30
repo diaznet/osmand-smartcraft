@@ -164,6 +164,7 @@ class OsmAndBridge(private val context: Context) {
         WidgetDef("smartcraft_block_pressure", "Block Pressure", "widget_obd_fuel_pressure_day", "widget_obd_fuel_pressure_night"),
         WidgetDef("smartcraft_oil_temp", "Oil Temp", "widget_obd_temperature_coolant_day", "widget_obd_temperature_coolant_night"),
         WidgetDef("smartcraft_seawater_temp", "Sea Temp", "widget_obd_temperature_coolant_day", "widget_obd_temperature_coolant_night"),
+        WidgetDef("smartcraft_fuel_efficiency", "Fuel Efficiency", "widget_obd_fuel_consumption_day", "widget_obd_fuel_consumption_night"),
     )
 
     private fun registerWidgets() {
@@ -207,6 +208,13 @@ class OsmAndBridge(private val context: Context) {
         updateWidget("smartcraft_block_pressure", blockPressVal, blockPressUnit, 10)
         updateWidget("smartcraft_oil_temp", oilTempVal, oilTempUnit, 11)
         updateWidget("smartcraft_seawater_temp", seaTempVal, seaTempUnit, 12)
+    }
+
+    /** Derived metric (fuel flow + GPS speed), pushed on its own timer rather than per BLE notification. */
+    fun updateEfficiency(kmPerL: Float?) {
+        if (!connected) return
+        val (value, unit) = unitPrefs.formatEfficiency(kmPerL)
+        updateWidget("smartcraft_fuel_efficiency", value, unit, 13)
     }
 
     private fun gearText(raw: Int): String = when {
