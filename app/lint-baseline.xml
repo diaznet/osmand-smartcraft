@@ -283,16 +283,6 @@
             column="5"/>
     </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.app_name` appears to be unused"
-        errorLine1="    &lt;string name=&quot;app_name&quot;>SmartCraft OsmAnd&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="3"
-            column="13"/>
-    </issue>
 
     <issue
         id="MonochromeLauncherIcon"

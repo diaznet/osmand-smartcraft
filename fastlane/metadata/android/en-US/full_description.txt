@@ -1,0 +1,32 @@
+SmartCraft for OsmAnd reads live engine data from a Mercury Marine SmartCraft gateway (the VesselView Mobile module) over Bluetooth LE and shows it as widgets on the OsmAnd or OsmAnd+ map, so you see your engine gauges and your chart on one screen.
+
+<b>Widgets</b>
+<ul>
+<li>Engine RPM</li>
+<li>Coolant, oil and seawater temperature</li>
+<li>Battery voltage</li>
+<li>Fuel flow and fuel tank level</li>
+<li>Oil pressure and block pressure</li>
+<li>Engine hours, fuel used and gear</li>
+<li>Fuel efficiency, calculated from engine fuel flow and the phone's GPS speed (km/L, L/100km, NM/L, L/NM or US mpg)</li>
+</ul>
+
+<b>Features</b>
+<ul>
+<li>Automatic reconnection to the gateway</li>
+<li>Configurable units: °C/°F, kPa/bar/PSI, L/h or gal/h</li>
+<li>Works with OsmAnd and OsmAnd+ (auto-detected)</li>
+<li>Simulator mode to try the widgets without a boat</li>
+<li>Debug log panel and optional log-to-file for diagnostics</li>
+</ul>
+
+<b>Requirements</b>
+<ul>
+<li>OsmAnd or OsmAnd+ installed. After starting the app, enable the SmartCraft widgets in OsmAnd: Menu → Configure screen.</li>
+<li>A Mercury SmartCraft engine with a VesselView Mobile gateway</li>
+<li>Bluetooth LE and location permission (location is needed for Bluetooth scanning and GPS speed)</li>
+</ul>
+
+No internet access, no ads, no tracking. The Bluetooth protocol was reverse engineered; some values (gear, fuel used, fuel flow calibration) are still being validated.
+
+This project is not affiliated with or endorsed by Mercury Marine, Brunswick Corporation or OsmAnd.
